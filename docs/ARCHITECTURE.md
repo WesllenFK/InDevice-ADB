@@ -220,3 +220,4 @@ Used by all scripts:
 | 2 | Argument error | Invalid flag or missing value |
 | 3 | App offline | MiniADBNotify not responding to ping |
 | 4 | Timeout | Discovery or operation timed out |
+| 5 | Write error | App cannot write to external storage (no permission) |

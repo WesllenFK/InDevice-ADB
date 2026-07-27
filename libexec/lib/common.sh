@@ -8,6 +8,7 @@ readonly STATE_DIR="$HOME/.adbparity"
 readonly REPLY_FILE="/sdcard/Documents/adb-notify/reply.txt"
 readonly DISCOVERED_FILE="/sdcard/Documents/adb-notify/adb-discovered.txt"
 readonly PING_FILE="/sdcard/Documents/adb-notify/ping.txt"
+readonly ERROR_FILE="/sdcard/Documents/adb-notify/error.txt"
 readonly DEBUG_DIR="/sdcard/Documents/adb-notify/debug"
 readonly APP_PACKAGE="com.miniadbnotify"
 readonly APP_RECEIVER="com.miniadbnotify/.NotifyReceiver"
@@ -60,6 +61,19 @@ msgf() {
   fi
 }
 
+# ── App error check (permission denied, etc.) ──────────────────────────
+check_app_error() {
+  if [ -s "$ERROR_FILE" ] 2>/dev/null; then
+    local err
+    err="$(tr -d '\r\n' < "$ERROR_FILE")"
+    log ERROR "app error: $err"
+    : > "$ERROR_FILE" 2>/dev/null || true
+    msgf "write_error" "$err"
+    return 0
+  fi
+  return 1
+}
+
 # ── ADB operations ─────────────────────────────────────────────────────────
 ping_app() {
   local timeout="${1:-5}"
@@ -71,6 +85,7 @@ ping_app() {
     if [ -s "$PING_FILE" ] 2>/dev/null; then return 0; fi
     sleep 1; waited=$((waited + 1))
   done
+  if check_app_error; then return 2; fi
   return 1
 }
 
@@ -92,6 +107,7 @@ discover_connect() {
     fi
     sleep 1; waited=$((waited + 1))
   done
+  check_app_error || true
   return 1
 }
 
@@ -114,6 +130,7 @@ discover_pair() {
     fi
     sleep 1; waited=$((waited + 1))
   done
+  check_app_error || true
   return 1
 }
 

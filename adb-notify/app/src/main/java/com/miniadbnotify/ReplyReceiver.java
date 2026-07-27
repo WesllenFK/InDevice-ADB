@@ -31,14 +31,22 @@ public class ReplyReceiver extends BroadcastReceiver {
             } else {
                 data = target + "\n" + replyStr + "\n";
             }
-            NotifyReceiver.writeExternalFile(context, "reply.txt", data);
-            NotifyReceiver.debug("replyReceiver wrote pair data: " + target + " / " + reply + " json=" + jsonMode);
-            Toast.makeText(context, "pair data sent", Toast.LENGTH_SHORT).show();
+            boolean ok = NotifyReceiver.writeExternalFile(context, "reply.txt", data);
+            if (ok) {
+                Toast.makeText(context, "pair data sent", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(context, "pair data failed: no write permission", Toast.LENGTH_LONG).show();
+            }
+            NotifyReceiver.debug("replyReceiver wrote pair data: " + target + " / " + reply + " json=" + jsonMode + " ok=" + ok);
         } else if (reply != null) {
             String data = reply.toString() + "\n";
-            NotifyReceiver.writeExternalFile(context, "reply-last.txt", data);
-            NotifyReceiver.debug("replyReceiver wrote reply id=" + id + " text=" + reply);
-            Toast.makeText(context, "reply received", Toast.LENGTH_SHORT).show();
+            boolean ok = NotifyReceiver.writeExternalFile(context, "reply-last.txt", data);
+            if (ok) {
+                Toast.makeText(context, "reply received", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(context, "reply failed: no write permission", Toast.LENGTH_LONG).show();
+            }
+            NotifyReceiver.debug("replyReceiver wrote reply id=" + id + " text=" + reply + " ok=" + ok);
         }
 
         if (id != null) {

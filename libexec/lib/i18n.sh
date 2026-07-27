@@ -40,6 +40,7 @@ _MSG["help_pair"]="pt:Uso: adb-pair [opcoes]\n  Pareamento ADB wireless completo
 _MSG["help_connect"]="pt:Uso: adb-connect [opcoes]\n  Conexao ADB rapida com descoberta automatica.|en:Usage: adb-connect [options]\n  Quick ADB connect with auto-discovery."
 _MSG["help_discover"]="pt:Uso: adb-discover [opcoes]\n  Descobre alvos ADB wireless.|en:Usage: adb-discover [options]\n  Discover ADB wireless targets."
 _MSG["help_reconnect"]="pt:Uso: adb-reconnect [opcoes]\n  Reconecta ao ultimo alvo ADB salvo.|en:Usage: adb-reconnect [options]\n  Reconnect to last saved ADB target."
+_MSG["write_error"]="pt:Erro de escrita no app: %s (sem permissao?)|en:App write error: %s (no permission?)"
 
 _i18n_msg() {
   local key="$1"

@@ -21,7 +21,12 @@ _duration() { DURATION="$(echo "$(date +%s) - $_START_TS" | bc)"; }
 
 # --- Step 1: Ping app ---
 msg "app_pinging"
-if ! ping_app; then
+ping_app; ping_st=$?
+if [ "$ping_st" -eq 2 ]; then
+  _duration; [ "$JSON_OUT" = "true" ] && output_json "error" "" "write_error" "$DURATION"
+  exit 5
+fi
+if [ "$ping_st" -ne 0 ]; then
   msg "app_offline"
   notify "fail-$RUN_ID" "$(msg failure)" "$(msg error_app_offline)"
   _duration; [ "$JSON_OUT" = "true" ] && output_json "offline" "" "" "$DURATION"

@@ -48,6 +48,7 @@ public class NotifyReceiver extends BroadcastReceiver {
     public static final String LAST_OUTPUT = "/sdcard/Documents/adb-notify/reply-last.txt";
     public static final String DEBUG_DIR = "/sdcard/Documents/adb-notify/debug";
     public static final String DEBUG_LOG = DEBUG_DIR + "/notify.log";
+    public static final String ERROR_FILE = "/sdcard/Documents/adb-notify/error.txt";
     public static final String KEY_TEXT_REPLY = "ADB_NOTIFY_REPLY";
     public static final String EXTRA_JSON = "json";
     public static final String PREF_NAME = "adb_notify_prefs";
@@ -70,7 +71,9 @@ public class NotifyReceiver extends BroadcastReceiver {
             return;
         }
         if ("ping".equals(mode)) {
-            writeExternalFile(context, "ping.txt", "ok\n");
+            if (!writeExternalFile(context, "ping.txt", "ok\n")) {
+                Toast.makeText(context, "ADB Notify: sem permissao de escrita", Toast.LENGTH_LONG).show();
+            }
             return;
         }
         showNotification(context, intent);
@@ -392,16 +395,8 @@ public class NotifyReceiver extends BroadcastReceiver {
         return "pt".equals(getLang(context)) ? ptText : enText;
     }
 
-    static void writeExternalFile(Context context, String fileName, String data) {
+    static boolean writeExternalFile(Context context, String fileName, String data) {
         try {
-            String baseDir = "/sdcard/Documents/adb-notify/";
-            File dir = new File(baseDir);
-            if (dir.isDirectory()) {
-                File[] stale = dir.listFiles((d, name) -> name.startsWith(fileName));
-                if (stale != null) {
-                    for (File f : stale) f.delete();
-                }
-            }
             if (Build.VERSION.SDK_INT >= 29) {
                 Uri collection = MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL);
                 context.getContentResolver().delete(collection,
@@ -415,19 +410,52 @@ public class NotifyReceiver extends BroadcastReceiver {
                 Uri uri = context.getContentResolver().insert(collection, values);
                 if (uri != null) {
                     try (OutputStream os = context.getContentResolver().openOutputStream(uri)) {
-                        if (os != null) os.write(data.getBytes(StandardCharsets.UTF_8));
+                        if (os != null) {
+                            os.write(data.getBytes(StandardCharsets.UTF_8));
+                            return true;
+                        }
                     }
                 }
             } else {
+                String baseDir = "/sdcard/Documents/adb-notify/";
+                File dir = new File(baseDir);
+                if (dir.isDirectory()) {
+                    File[] stale = dir.listFiles((d, name) -> name.startsWith(fileName));
+                    if (stale != null) {
+                        for (File f : stale) f.delete();
+                    }
+                }
                 File file = new File(baseDir + fileName);
                 File parent = file.getParentFile();
                 if (parent != null) parent.mkdirs();
                 try (FileOutputStream fos = new FileOutputStream(file, false)) {
                     fos.write(data.getBytes(StandardCharsets.UTF_8));
+                    return true;
                 }
             }
         } catch (Exception e) {
             debug("writeExternalFile failed: " + fileName + " " + e.getMessage());
+        }
+        writeErrorFile(context, "write_failed: " + fileName + ": permission_denied");
+        return false;
+    }
+
+    private static void writeErrorFile(Context context, String message) {
+        try {
+            File errorFile = new File("/sdcard/Documents/adb-notify/error.txt");
+            File parent = errorFile.getParentFile();
+            if (parent != null) parent.mkdirs();
+            try (FileOutputStream fos = new FileOutputStream(errorFile, false)) {
+                fos.write(message.getBytes(StandardCharsets.UTF_8));
+            }
+        } catch (Exception e) {
+            try {
+                File fallback = new File(context.getFilesDir(), "adb-notify-error.txt");
+                try (FileOutputStream fos = new FileOutputStream(fallback, false)) {
+                    fos.write(message.getBytes(StandardCharsets.UTF_8));
+                }
+            } catch (Exception ignored) {
+            }
         }
     }
 
