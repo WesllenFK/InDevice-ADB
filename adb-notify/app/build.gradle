@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace 'com.miniadbnotify'
+    namespace 'com.indevice.adb'
     compileSdk 35
 
     defaultConfig {
-        applicationId 'com.miniadbnotify'
+        applicationId 'com.indevice.adb'
         minSdk 24
         targetSdk 28
         versionCode 1
@@ -30,7 +30,14 @@ android {
 
     applicationVariants.all { variant ->
         variant.outputs.all { output ->
-            outputFileName = "adb-notify_${variant.buildType.name}.apk"
+            outputFileName = "indevice-adb_${variant.buildType.name}.apk"
         }
     }
+}
+
+dependencies {
+    implementation('androidx.activity:activity:1.9.3') {
+        exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+    }
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24'
 }

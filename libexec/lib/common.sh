@@ -10,8 +10,8 @@ readonly DISCOVERED_FILE="/sdcard/Documents/adb-notify/adb-discovered.txt"
 readonly PING_FILE="/sdcard/Documents/adb-notify/ping.txt"
 readonly ERROR_FILE="/sdcard/Documents/adb-notify/error.txt"
 readonly DEBUG_DIR="/sdcard/Documents/adb-notify/debug"
-readonly APP_PACKAGE="com.miniadbnotify"
-readonly APP_RECEIVER="com.miniadbnotify/.NotifyReceiver"
+readonly APP_PACKAGE="com.indevice.adb"
+readonly APP_RECEIVER="com.indevice.adb/.NotifyReceiver"
 readonly LOG_FILE="$STATE_DIR/adbparity.log"
 readonly LAST_TARGET_FILE="$STATE_DIR/last-target.txt"
 
@@ -198,8 +198,8 @@ parse_args() {
       -v|--verbose) VERBOSE=true; shift ;;
       -j|--json) JSON_OUT=true; shift ;;
       -l|--lang)
-        [ $# -lt 2 ] && { echo "Error: --lang requires pt or en" >&2; exit 2; }
-        case "$2" in pt|en) ADBPARITY_LANG="$2"; shift 2 ;; *) echo "Error: invalid lang" >&2; exit 2 ;; esac ;;
+        [ $# -lt 2 ] && { echo "Error: --lang requires pt, en, es, zh, or ru" >&2; exit 2; }
+        case "$2" in pt|en|es|zh|ru) ADBPARITY_LANG="$2"; shift 2 ;; *) echo "Error: invalid lang (use pt, en, es, zh, ru)" >&2; exit 2 ;; esac ;;
       --no-notify) NO_NOTIFY=true; shift ;;
       --timeout)
         [ $# -lt 2 ] && { echo "Error: --timeout requires number" >&2; exit 2; }
