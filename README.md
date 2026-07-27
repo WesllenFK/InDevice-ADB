@@ -4,108 +4,98 @@
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Status](https://img.shields.io/badge/status-stable-brightgreen)
 
+**🌐 Read in:** [Português](README.pt.md) · [Español](README.es.md) · [简体中文](README.zh-CN.md)
+
 ---
 
-## 📋 O que é / What it is
-
-**ADB Parity** gerencia todo o fluxo de pareamento e conexão ADB wireless
-diretamente do Termux: descobre dispositivos na rede (NsdManager), solicita o
-código de pareamento via notificação no Android, conecta e reconecta.
+## 📋 Overview
 
 **ADB Parity** manages the full wireless ADB pairing and connection flow from
-Termux: discovers devices on the network (NsdManager), requests the pairing code
-through an Android notification, connects, and reconnects.
+Termux: discovers devices on the network via NsdManager, requests the 6-digit
+pairing code through an Android notification, connects, reconnects, and handles
+discovery retries when the NsdManager cache goes stale.
 
 ---
 
-## ⚡ Quick Start / Comece Aqui
+## ⚡ Quick Start
 
-1. **Instale o APK** — copie `adb-notify_debug.apk` para o `/sdcard/` e instale
-   manualmente (MIUI bloqueia `pm install`). Abra o app uma vez para conceder
-   permissões.
-2. **Instale os scripts** — `bash install.sh`
-3. **Ative a Depuração sem Fio** no dispositivo alvo (Developer Options)
-4. **Rode:** `adb-pair`
-
-```
-1. **Install the APK** — copy `adb-notify_debug.apk` to `/sdcard/` and install
-   manually (MIUI blocks `pm install`). Open the app once to grant permissions.
+1. **Install the APK** — copy `adb-notify_debug.apk` to `/sdcard/` and open it
+   on your device to install. Open the app once to grant notification permissions.
 2. **Install the scripts** — `bash install.sh`
 3. **Enable Wireless Debugging** on the target device (Developer Options)
 4. **Run:** `adb-pair`
-```
+
+That's it. The tool pings the app, discovers targets on the network, and
+either connects directly or guides you through pairing.
 
 ---
 
-## 🔧 Comandos / Commands
+## 🔧 Commands
 
-| Comando / Command | O que faz / What it does |
-|-------------------|--------------------------|
-| `adb-pair` | Fluxo completo: ping → descobrir → conectar (ou parear → conectar) |
-| `adb-connect` | Conexão rápida com descoberta automática |
-| `adb-reconnect` | Reconecta ao último alvo salvo |
-| `adb-discover` | Descobre alvos (mDNS → NsdManager → scan local) |
-| `adb-parity-setup` | Gerencia instalação: install \| uninstall \| status \| apk |
+| Command | Description |
+|---------|-------------|
+| `adb-pair` | Full flow: ping → discover → connect (or pair → connect) |
+| `adb-connect` | Quick connect with auto-discovery |
+| `adb-reconnect` | Reconnect to the last saved target |
+| `adb-discover` | Discover targets (mDNS → NsdManager → localhost scan) |
+| `adb-parity-setup` | Manage installation: install \| uninstall \| status \| apk |
 
-**Flags comuns / Common flags:** `--help`, `--verbose`, `--json`, `--lang pt|en`,
+**Common flags:** `--help`, `--verbose`, `--json`, `--lang pt|en`,
 `--no-notify`, `--timeout N`, `--connect-only`
 
 ---
 
 ## 📦 MiniADBNotify App
 
-App Android companion (`com.miniadbnotify`) que usa `NsdManager` para descobrir
-serviços ADB wireless na rede e exibe notificações com campo de texto para o
-código de pareamento. A comunicação script → app acontece via `am broadcast`;
-app → script via arquivos no `/sdcard/Documents/adb-notify/`.
-
 Companion Android app (`com.miniadbnotify`) that uses `NsdManager` to discover
-ADB wireless services on the network and shows notifications with a text input
-for the pairing code. Script → app communication uses `am broadcast`; app →
-script uses files on `/sdcard/Documents/adb-notify/`.
+ADB wireless services on the local network and shows expandable notifications
+with a text input field for the pairing code.
 
-📁 Código fonte / Source: [`app/`](app/)
+Script → app communication happens via `am broadcast`; app → script replies
+land as files on `/sdcard/Documents/adb-notify/`.
+
+📁 Source: [`app/`](app/)
 
 ---
 
-## 🏗 Arquitetura / Architecture
+## 🏗 Architecture
 
 ```
 Termux (PRoot) ──am broadcast──► MiniADBNotify (Android)
      │                                  │
-     │ adb pair / connect               │ NsdManager / Notificações
+     │ adb pair / connect               │ NsdManager / Notifications
      ▼                                  ▼
-  Dispositivo alvo ◄── TCP WiFi ── Depuração sem Fio
+  Target device ◄── TCP WiFi ── Wireless Debugging
 ```
 
-🔧 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — funções do common.sh, protocolo
-app↔script, NsdManager caveats, XSpaceManager workaround
+🔧 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — common.sh internals, app↔script
+protocol, NsdManager caveats, XSpaceManager workaround
 
 ---
 
-## 🚧 Problemas Comuns / Common Issues
+## 🚧 Common Issues
 
-| Problema / Issue | Solução / Fix |
-|------------------|---------------|
-| "app offline" | Abra o MiniADBNotify manualmente uma vez para conceder permissões |
-| Nenhum alvo descoberto | Verifique WiFi e Depuração sem Fio; tente `adb-discover` |
-| Pareamento OK, conexão falha | Espere 10s e tente `adb-connect` (cache do NsdManager) |
-| `pm install` bloqueado | Instale o APK manualmente pelo gerenciador de arquivos |
+| Issue | Fix |
+|-------|-----|
+| "app offline" | Open MiniADBNotify manually once to grant notification permissions |
+| No targets found | Check WiFi and Wireless Debugging on the target device |
+| Pairing OK, connect fails | Wait 10s and retry with `adb-connect` (stale NsdManager cache) |
+| APK won't install from CLI | Copy to `/sdcard/` and install via file manager |
 
-📘 [docs/USAGE.md#FAQ](docs/USAGE.md#FAQ) — perguntas frequentes detalhadas
-
----
-
-## 📖 Documentação / Documentation
-
-| Documento | Conteúdo |
-|-----------|----------|
-| 📘 [USAGE.md](docs/USAGE.md) | Instalação completa, guia de comandos, JSON mode, FAQ |
-| 🏗️ [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Arquitetura técnica, funções, protocolo app↔script |
-| 📋 [CHANGELOG.md](docs/CHANGELOG.md) | Histórico de versões |
+📘 [docs/USAGE.md#FAQ](docs/USAGE.md#FAQ) — detailed FAQ
 
 ---
 
-## 📄 Licença / License
+## 📖 Documentation
+
+| Doc | Contents |
+|-----|----------|
+| 📘 [USAGE.md](docs/USAGE.md) | Full installation, command guide, JSON mode, FAQ |
+| 🏗️ [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Technical architecture, functions, app↔script protocol |
+| 📋 [CHANGELOG.md](docs/CHANGELOG.md) | Version history |
+
+---
+
+## 📄 License
 
 MIT © 2026 WesllenFK
