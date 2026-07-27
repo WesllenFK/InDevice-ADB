@@ -1,0 +1,9 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# adb-connect — Quick ADB connect with auto-discovery
+set -euo pipefail
+
+ADBPARITY_HOME="${ADBPARITY_HOME:-/root/adbparity}"
+source "$ADBPARITY_HOME/libexec/lib/common.sh"
+source "$ADBPARITY_HOME/libexec/lib/i18n.sh"
+
+exec "$ADBPARITY_HOME/libexec/adb-connect.sh" "$@"

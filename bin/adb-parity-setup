@@ -1,0 +1,124 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# adb-parity-setup — Manage ADB Parity installation
+set -euo pipefail
+
+PREFIX="${PREFIX:-/data/data/com.termux/files/usr}"
+ADBPARITY_HOME="${ADBPARITY_HOME:-$PREFIX/lib/adbparity}"
+SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+_find_install_script() {
+  if [ -f "$SELF_DIR/../install.sh" ]; then
+    printf '%s' "$(cd "$SELF_DIR/.." && pwd)/install.sh"
+  elif [ -f "$ADBPARITY_HOME/install.sh" ]; then
+    printf '%s' "$ADBPARITY_HOME/install.sh"
+  fi
+}
+
+_find_uninstall_script() {
+  if [ -f "$SELF_DIR/../uninstall.sh" ]; then
+    printf '%s' "$(cd "$SELF_DIR/.." && pwd)/uninstall.sh"
+  elif [ -f "$ADBPARITY_HOME/uninstall.sh" ]; then
+    printf '%s' "$ADBPARITY_HOME/uninstall.sh"
+  fi
+}
+
+_find_apk() {
+  if [ -f "$SELF_DIR/../adb-notify_debug.apk" ]; then
+    printf '%s' "$SELF_DIR/../adb-notify_debug.apk"; return
+  fi
+  if [ -f "$ADBPARITY_HOME/adb-notify_debug.apk" ]; then
+    printf '%s' "$ADBPARITY_HOME/adb-notify_debug.apk"; return
+  fi
+  if [ -d "$SELF_DIR/../app" ]; then
+    local apk
+    apk="$(find "$SELF_DIR/../app" -name '*.apk' 2>/dev/null | head -1)" || true
+    if [ -n "$apk" ]; then printf '%s' "$apk"; return; fi
+  fi
+}
+
+case "${1:-help}" in
+  install)
+    INSTALL_SCRIPT="$(_find_install_script)"
+    if [ -z "$INSTALL_SCRIPT" ]; then
+      printf 'Error: install.sh not found. Run from project directory.\n' >&2
+      exit 1
+    fi
+    shift
+    exec "$INSTALL_SCRIPT" "$@"
+    ;;
+  uninstall)
+    UNINSTALL_SCRIPT="$(_find_uninstall_script)"
+    if [ -z "$UNINSTALL_SCRIPT" ]; then
+      printf 'Error: uninstall.sh not found.\n' >&2
+      exit 1
+    fi
+    shift
+    exec "$UNINSTALL_SCRIPT" "$@"
+    ;;
+  status)
+    printf 'ADB Parity Status\n'
+    printf '================\n'
+
+    local count=0
+    for f in adb-pair adb-connect adb-reconnect adb-discover adb-parity-setup; do
+      if [ -x "$PREFIX/bin/$f" ]; then count=$((count + 1)); fi
+    done
+    if [ "$count" -gt 0 ]; then
+      printf '  Commands:  %d installed in %s\n' "$count" "$PREFIX/bin/"
+    else
+      printf '  Commands:  none installed\n'
+    fi
+
+    if [ -d "$ADBPARITY_HOME/libexec" ]; then
+      local scount
+      scount="$(find "$ADBPARITY_HOME/libexec" -maxdepth 1 -name '*.sh' 2>/dev/null | wc -l)" || scount=0
+      printf '  Scripts:   %d scripts in %s\n' "$scount" "$ADBPARITY_HOME/libexec/"
+    else
+      printf '  Scripts:   not installed\n'
+    fi
+
+    if [ -d "$HOME/.adbparity" ]; then
+      printf '  State:     %s\n' "$HOME/.adbparity/"
+    else
+      printf '  State:     not initialized\n'
+    fi
+
+    if command -v /system/bin/pm >/dev/null 2>&1; then
+      if /system/bin/pm list packages com.miniadbnotify 2>/dev/null | grep -q .; then
+        printf '  App:       com.miniadbnotify installed\n'
+      else
+        printf '  App:       com.miniadbnotify not installed\n'
+      fi
+    else
+      printf '  App:       unknown (pm not available)\n'
+    fi
+    ;;
+  apk)
+    APK="$(_find_apk)"
+    if [ -z "$APK" ]; then
+      printf 'Error: APK not found.\n' >&2
+      exit 1
+    fi
+    cp "$APK" /sdcard/adb-notify.apk
+    printf 'APK copied to /sdcard/adb-notify.apk\n'
+    printf 'Install manually:\n'
+    printf '  pm install /sdcard/adb-notify.apk\n'
+    ;;
+  help|--help|-h)
+    cat <<'EOF'
+Usage: adb-parity-setup <command> [options]
+
+Commands:
+  install               Install ADB Parity scripts (passes options to install.sh)
+  uninstall             Remove ADB Parity scripts (passes options to uninstall.sh)
+  status                Check installation status
+  apk                   Copy APK to /sdcard for manual install
+  help                  Show this help
+EOF
+    ;;
+  *)
+    printf 'Unknown command: %s\n' "$1" >&2
+    printf 'Usage: adb-parity-setup <command>\n' >&2
+    exit 2
+    ;;
+esac

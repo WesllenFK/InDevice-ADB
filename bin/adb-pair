@@ -1,0 +1,10 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# adb-pair — Wireless ADB pairing & connection tool
+# Full flow: ping → auto-discover → connect (or pair → connect)
+set -euo pipefail
+
+ADBPARITY_HOME="${ADBPARITY_HOME:-/root/adbparity}"
+source "$ADBPARITY_HOME/libexec/lib/common.sh"
+source "$ADBPARITY_HOME/libexec/lib/i18n.sh"
+
+exec "$ADBPARITY_HOME/libexec/adb-pair.sh" "$@"

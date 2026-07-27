@@ -1,0 +1,10 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# adb-discover — Discover ADB wireless targets
+# Usage: adb-discover [--connect|--pair]
+set -euo pipefail
+
+ADBPARITY_HOME="${ADBPARITY_HOME:-/root/adbparity}"
+source "$ADBPARITY_HOME/libexec/lib/common.sh"
+source "$ADBPARITY_HOME/libexec/lib/i18n.sh"
+
+exec "$ADBPARITY_HOME/libexec/adb-discover.sh" "$@"
